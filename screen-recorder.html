@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Recorder</title>
+  <meta charset="UTF-8"/>
+  <link rel="stylesheet" href="style.css">
+  <style> 
+.container {
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.record-button {
+  margin-bottom: 20px;
+  border-radius: 5px;
+  font-size: 18px;
+  width:200px
+} 
+
+.preview-container {
+  background-color: #f1f1f1; 
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.video {
+  width: 100%;
+  border: 1px solid #ccc; 
+}
+
+#download-button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 15px;
+  border: none; 
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+}
+#stop-button {
+  margin-bottom: 20px;
+  border-radius: 5px;
+  font-size: 18px;
+  background-color: #dc3545;
+  color: #fff;
+  cursor: pointer; 
+  width:200px
+}
+
+.buttons-group {
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+  <div class="buttons-group">
+    <button id="record-button" class="record-button">RECORD</button>
+	<button id="stop-button" class="stop-button">STOP</button>
+	</div>
+    <div class="preview-container">
+      <video class="video" controls id="preview-video" style="visibility: hidden"></video>
+    </div>
+  </div>
+
+  <script>
+    let btn = document.querySelector("#record-button");
+	let stopBtn = document.querySelector("#stop-button");
+	
+    let previewVideo = document.getElementById("preview-video");
+
+
+
+    btn.addEventListener("click", async function() {
+      let stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+		disableDesktopCaptureUI: true
+      });
+
+      let mediaRecorder = new MediaRecorder(stream); 
+
+		mediaRecorder.start();
+
+      let chunks = [];
+      mediaRecorder.addEventListener('dataavailable', function(e) {
+        chunks.push(e.data);
+      });
+
+      mediaRecorder.addEventListener('stop', function() {
+	  console.log("after stopBtn ok")
+        previewVideo.style.visibility = "visible";
+        previewVideo.src = URL.createObjectURL(new Blob(chunks, {
+          type: chunks[0].type
+        }));
+
+        let downloadButton = document.createElement('button');
+        downloadButton.textContent = "Download Video";
+        downloadButton.addEventListener("click", function() {
+          let a = document.createElement('a');
+          a.href = previewVideo.src;
+          a.download = 'AHMED-VIDEO';
+          a.click();
+        });
+
+        previewVideo.controls.appendChild(downloadButton);
+		
+      });
+	  stopBtn.addEventListener("click", () => {
+		  mediaRecorder.stop(); 
+		  console.log("stopBtn ok")
+		});
+	
+      mediaRecorder.start();
+    });
+	
+	
+
+	function stopRecording() {
+	  return new Promise(resolve => {
+		mediaRecorder.addEventListener('stop', resolve);
+		mediaRecorder.stop();  
+	  });
+	}
+	
+  </script>
+</body>
+</html>
+
+
